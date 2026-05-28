@@ -35,6 +35,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     private double grav = 0.5;
 
     private Point check = new Point(0,0);
+    private Point check2 = new Point(0,0);
 
     public DisplayPanel() {
 
@@ -113,8 +114,9 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
                 for (int y = prevY; y <= marioY; y++) {
 
                     check.setLocation(marioX, y + 80);
+                    check2.setLocation(marioX + 48, y + 80);
 
-                    if (platform1.contains(check)) {
+                    if (platform1.contains(check) || platform1.contains(check2)) {
 
                         marioY = platform1.y - 80;
                         MarioYVelocity = 0;
@@ -132,7 +134,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
         timer.start();
     }
 
-// -------------------- Draw --------------------
+// -------------------- Score Display--------------------
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
