@@ -1,3 +1,5 @@
+import org.w3c.dom.css.Rect;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -5,6 +7,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
 
@@ -19,15 +22,17 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
 
     private boolean up, down, left, right;
 
-    private double MarioXVelocity;
-    private double MarioYVelocity;
+    private double MarioXVelocity = 5;
+    private double MarioYVelocity = -10;
 
     private int MarioXAcceleration = 3;
     private int MarioYAcceleration = 5;
 
     private Rectangle marioHitbox = new Rectangle(0, 0, 48, 80);
 
-    private Rectangle platform1 = new Rectangle(526, 440, 112, 11);
+    ArrayList<Rectangle> Platforms = new ArrayList<>();
+    private SpeedPlatform platform1 = new SpeedPlatform(526, 440, 112, 11);
+    Platforms.add();
     private Rectangle floor = new Rectangle(0, 515, 960, 1);
 
     private boolean onplatform;
@@ -59,36 +64,26 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
         requestFocusInWindow();
 
         Timer timer = new Timer(16, e -> {
-
             int prevX = marioX;
             int prevY = marioY;
-
-            if (left) {
-                marioX -= 5;
-            }
-
-            if (right) {
-                marioX += 5;
-            }
+            MarioXVelocity = 5;
 
             marioHitbox.setBounds(marioX, marioY, 48, 80);
 
-            if (marioHitbox.intersects(platform1) || marioHitbox.intersects(floor)) {
-                marioX = prevX;
-            }
-
-            marioHitbox.setBounds(marioX, marioY, 48, 80);
-
-            // ---------------- GRAVITY ----------------
+// ---------------- GRAVITY ----------------
             MarioYVelocity += grav;
 
             if (down) {
                 MarioYVelocity += 1;
             }
-
             if (up && onplatform) {
                 MarioYVelocity = -10;
                 onplatform = false;
+                if(platform1.intersects(new Rectangle(marioX, marioY + 1, 48, 80))) {
+                    if(platform1.speed()) {
+                        MarioYVelocity = -20;
+                    }
+                }
             }
 
             // apply vertical movement
@@ -111,21 +106,29 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
 // ---------------- Platform Collision ----------------
             if (MarioYVelocity >= 0) {
 
-                for (int y = prevY; y <= marioY; y++) {
-
-                    check.setLocation(marioX, y + 80);
-                    check2.setLocation(marioX + 48, y + 80);
-
-                    if (platform1.contains(check) || platform1.contains(check2)) {
+                    if (platform1.intersects(new Rectangle(marioX, marioY + 1, 48, 80))) {
 
                         marioY = platform1.y - 80;
                         MarioYVelocity = 0;
                         onplatform = true;
-
+                        if(platform1.speed()) {
+                            MarioXVelocity = 10;
+                        }
                         marioHitbox.setBounds(marioX, marioY, 48, 80);
-                        break;
-                    }
                 }
+            }
+
+            if (left) {
+                marioX -= (int) MarioXVelocity;
+            }
+            if (right) {
+                marioX += (int) MarioXVelocity;
+            }
+
+            marioHitbox.setBounds(marioX, marioY, 48, 80);
+
+            if (marioHitbox.intersects(platform1) || marioHitbox.intersects(floor)) {
+                marioX = prevX;
             }
 
             repaint();
@@ -162,7 +165,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     @Override public void mouseEntered(MouseEvent e) {}
     @Override public void mouseExited(MouseEvent e) {}
 
-    // -------------------- Keyboard --------------------
+// -------------------- Keyboard --------------------
     @Override public void keyTyped(KeyEvent e) {}
 
     @Override
