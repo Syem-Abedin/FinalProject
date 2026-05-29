@@ -31,8 +31,8 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     private Rectangle marioHitbox = new Rectangle(0, 0, 48, 80);
 
     ArrayList<Rectangle> Platforms = new ArrayList<>();
-    private SpeedPlatform platform1 = new SpeedPlatform(526, 440, 112, 11);
-    Platforms.add();
+    private final SpeedPlatform platform1 = new SpeedPlatform(526, 440, 112, 11);
+
     private Rectangle floor = new Rectangle(0, 515, 960, 1);
 
     private boolean onplatform;
@@ -49,6 +49,9 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
 
         marioX = 50;
         marioY = 335;
+
+        Platforms.add(platform1);
+
 
         try {
             background = ImageIO.read(new File("src/background.png"));
@@ -79,9 +82,11 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
             if (up && onplatform) {
                 MarioYVelocity = -10;
                 onplatform = false;
-                if(platform1.intersects(new Rectangle(marioX, marioY + 1, 48, 80))) {
-                    if(platform1.speed()) {
-                        MarioYVelocity = -20;
+                for (Rectangle thingy : Platforms) {
+                    if(thingy.intersects(new Rectangle(marioX, marioY + 1, 48, 80))) {
+                        if(thingy instanceof SpeedPlatform) {
+                            MarioYVelocity = -20;
+                        }
                     }
                 }
             }
@@ -105,32 +110,33 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
 
 // ---------------- Platform Collision ----------------
             if (MarioYVelocity >= 0) {
+                for (Rectangle thingy : Platforms) {
+                    if (thingy.intersects(new Rectangle(marioX, marioY + 1, 48, 80))) {
 
-                    if (platform1.intersects(new Rectangle(marioX, marioY + 1, 48, 80))) {
-
-                        marioY = platform1.y - 80;
+                        marioY = thingy.y - 80;
                         MarioYVelocity = 0;
                         onplatform = true;
-                        if(platform1.speed()) {
+                        if (thingy instanceof SpeedPlatform) {
                             MarioXVelocity = 10;
                         }
                         marioHitbox.setBounds(marioX, marioY, 48, 80);
+                    }
+                }
+
+                    if (left) {
+                        marioX -= (int) MarioXVelocity;
+                    }
+                    if (right) {
+                        marioX += (int) MarioXVelocity;
+                    }
+
+                marioHitbox.setBounds(marioX, marioY, 48, 80);
+                for (Rectangle dih : Platforms) {
+                    if (marioHitbox.intersects(dih) || marioHitbox.intersects(floor)) {
+                        marioX = prevX;
+                    }
                 }
             }
-
-            if (left) {
-                marioX -= (int) MarioXVelocity;
-            }
-            if (right) {
-                marioX += (int) MarioXVelocity;
-            }
-
-            marioHitbox.setBounds(marioX, marioY, 48, 80);
-
-            if (marioHitbox.intersects(platform1) || marioHitbox.intersects(floor)) {
-                marioX = prevX;
-            }
-
             repaint();
         });
 
@@ -206,4 +212,5 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
         if (keyCode == KeyEvent.VK_W) up = false;
         if (keyCode == KeyEvent.VK_S) down = false;
     }
+
 }
