@@ -157,8 +157,14 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     }
 
 // -------------------- Recoloring --------------------
-    @Override public void mouseClicked(MouseEvent e) {}
-    @Override public void mousePressed(MouseEvent e) {}
+    @Override public void mouseClicked(MouseEvent e) {
+    }
+    @Override public void mousePressed(MouseEvent e) {
+        int i;
+        if(e.getButton() == MouseEvent.BUTTON3) {
+            Platforms.add(new Rectangle(e.getX(), e.getY(), 1, 1));
+        }
+    }
 
     @Override
     public void mouseReleased(MouseEvent e) {
