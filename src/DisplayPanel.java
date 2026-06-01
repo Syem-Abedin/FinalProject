@@ -36,11 +36,9 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     private Rectangle floor = new Rectangle(0, 515, 960, 1);
 
     private boolean onplatform;
+    private boolean draw;
 
     private double grav = 0.5;
-
-    private Point check = new Point(0,0);
-    private Point check2 = new Point(0,0);
 
     public DisplayPanel() {
 
@@ -109,26 +107,29 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
             }
 
 // ---------------- Platform Collision ----------------
-            if (MarioYVelocity >= 0) {
                 for (Rectangle thingy : Platforms) {
                     if (thingy.intersects(new Rectangle(marioX, marioY + 1, 48, 80))) {
-
-                        marioY = thingy.y - 80;
-                        MarioYVelocity = 0;
-                        onplatform = true;
-                        if (thingy instanceof SpeedPlatform) {
-                            MarioXVelocity = 10;
+                        if (MarioYVelocity > 0) {
+                            marioY = thingy.y - 80;
+                            MarioYVelocity = 0;
+                            onplatform = true;
+                            if (thingy instanceof SpeedPlatform) {
+                                MarioXVelocity = 10;
+                            }
+                        } else {
+                            MarioYVelocity *= -1;
+                            marioY = thingy.y + thingy.height;
                         }
                         marioHitbox.setBounds(marioX, marioY, 48, 80);
                     }
                 }
 
-                    if (left) {
-                        marioX -= (int) MarioXVelocity;
-                    }
-                    if (right) {
-                        marioX += (int) MarioXVelocity;
-                    }
+                if (left) {
+                    marioX -= (int) MarioXVelocity;
+                }
+                if (right) {
+                    marioX += (int) MarioXVelocity;
+                }
 
                 marioHitbox.setBounds(marioX, marioY, 48, 80);
                 for (Rectangle dih : Platforms) {
@@ -136,7 +137,6 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
                         marioX = prevX;
                     }
                 }
-            }
             repaint();
         });
 
@@ -160,7 +160,6 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     @Override public void mouseClicked(MouseEvent e) {
     }
     @Override public void mousePressed(MouseEvent e) {
-        int i;
         if(e.getButton() == MouseEvent.BUTTON3) {
             Platforms.add(new Rectangle(e.getX(), e.getY(), 1, 1));
         }
