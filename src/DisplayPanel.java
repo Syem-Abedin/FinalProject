@@ -28,6 +28,8 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     private int MarioXAcceleration = 3;
     private int MarioYAcceleration = 5;
 
+    private Graphics GEE;
+
     private Rectangle marioHitbox = new Rectangle(0, 0, 48, 80);
 
     ArrayList<Rectangle> Platforms = new ArrayList<>();
@@ -37,6 +39,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
 
     private boolean onplatform;
     private boolean draw;
+    private Point check = new Point();
 
     private double grav = 0.5;
 
@@ -66,7 +69,6 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
 
         Timer timer = new Timer(16, e -> {
             int prevX = marioX;
-            int prevY = marioY;
             MarioXVelocity = 5;
 
             marioHitbox.setBounds(marioX, marioY, 48, 80);
@@ -147,7 +149,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-
+        GEE = g;
         g.drawImage(background, 0, 0, null);
         g.drawImage(mario, marioX, marioY, null);
 
@@ -160,8 +162,12 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     @Override public void mouseClicked(MouseEvent e) {
     }
     @Override public void mousePressed(MouseEvent e) {
-        if(e.getButton() == MouseEvent.BUTTON3) {
-            Platforms.add(new Rectangle(e.getX(), e.getY(), 1, 1));
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            check.setLocation(e.getX(), e.getY());
+            if(!marioHitbox.contains(check)) {
+                Platforms.add(new Rectangle(e.getX(), e.getY(), 1, 1));
+                GEE.drawRect(e.getX(), e.getY(), 1, 1);
+            }
         }
     }
 

@@ -13,7 +13,7 @@ public class Main {
         // add it to the frame
         frame.add(panel);
 
-        // call setVisible after everything else
+        // call setVisible after everything elsead d a
         frame.setVisible(true);
     }
 }
