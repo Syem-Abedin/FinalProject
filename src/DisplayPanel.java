@@ -90,7 +90,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
                 }
             }
 
-            // apply vertical movement
             marioY += (int) MarioYVelocity;
 
             marioHitbox.setBounds(marioX, marioY, 48, 80);
@@ -164,30 +163,29 @@ public void paintComponent(Graphics g) {
     g.setColor(blueColor ? Color.BLUE : Color.BLACK);
     g.drawString("Score: " + score, 50, 30);
 }
-
+//ts does NOT loop
     @Override
     public void mousePressed(MouseEvent e) {
-        if (SwingUtilities.isRightMouseButton(e)) {
+        if (e.getButton() == MouseEvent.BUTTON3) {
             check.setLocation(e.getX(), e.getY());
-            for (Rectangle dih : Platforms) {
-                if (!dih.contains(check)) {
-                    check.setLocation(e.getX(), e.getY());
-                    if (!marioHitbox.contains(check)) {
+            for (int dih = 0; dih < Platforms.size(); dih++) {
+                if (!Platforms.get(dih).contains(check) && !marioHitbox.contains(check)) {
                         Platforms.add(new Rectangle(e.getX(), e.getY(), 10, 10));
                         repaint();
-                    }
                 }
             }
         }
     }
-
+//ts loops
     @Override
     public void mouseDragged(MouseEvent e) {
         if (SwingUtilities.isRightMouseButton(e)) {
             check.setLocation(e.getX(), e.getY());
-            if (!marioHitbox.contains(check)) {
-                Platforms.add(new Rectangle(e.getX(), e.getY(), 10, 10));
-                repaint();
+            for (int dih = 0; dih < Platforms.size(); dih++) {
+                if (!Platforms.get(dih).contains(check) && !marioHitbox.contains(check)) {
+                    Platforms.add(new Rectangle(e.getX(), e.getY(), 10, 10));
+                    repaint();
+                }
             }
         }
     }
