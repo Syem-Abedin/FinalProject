@@ -1,5 +1,3 @@
-import org.w3c.dom.css.Rect;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -9,10 +7,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
+public class DisplayPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener {
 
     private int score;
-    private boolean yellowColor;
+    private boolean blueColor;
 
     private int marioX;
     private int marioY;
@@ -46,7 +44,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     public DisplayPanel() {
 
         score = 0;
-        yellowColor = true;
+        blueColor = true;
 
         marioX = 50;
         marioY = 335;
@@ -62,6 +60,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
         }
 
         addMouseListener(this);
+        addMouseMotionListener(this);
         addKeyListener(this);
 
         setFocusable(true);
@@ -146,41 +145,68 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener {
     }
 
 // -------------------- Score Display--------------------
+    // ts loops
+@Override
+public void paintComponent(Graphics g) {
+    super.paintComponent(g);
+
+    g.drawImage(background, 0, 0, null);
+    g.drawImage(mario, marioX, marioY, null);
+
+    g.setColor(Color.BLUE);
+    for (Rectangle r : Platforms) {
+        if (r != Platforms.get(0)) {
+            g.fillRect(r.x, r.y, 10, 10);
+        }
+    }
+
+    g.setFont(new Font("Arial", Font.BOLD, 16));
+    g.setColor(blueColor ? Color.BLUE : Color.BLACK);
+    g.drawString("Score: " + score, 50, 30);
+}
+
     @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        GEE = g;
-        g.drawImage(background, 0, 0, null);
-        g.drawImage(mario, marioX, marioY, null);
-
-        g.setFont(new Font("Arial", Font.BOLD, 16));
-        g.setColor(yellowColor ? Color.YELLOW : Color.BLACK);
-        g.drawString("Score: " + score, 50, 30);
-    }
-
-// -------------------- Recoloring --------------------
-    @Override public void mouseClicked(MouseEvent e) {
-    }
-    @Override public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3) {
+    public void mousePressed(MouseEvent e) {
+        if (SwingUtilities.isRightMouseButton(e)) {
             check.setLocation(e.getX(), e.getY());
-            if(!marioHitbox.contains(check)) {
-                Platforms.add(new Rectangle(e.getX(), e.getY(), 1, 1));
-                GEE.drawRect(e.getX(), e.getY(), 1, 1);
+            for (Rectangle dih : Platforms) {
+                if (!dih.contains(check)) {
+                    check.setLocation(e.getX(), e.getY());
+                    if (!marioHitbox.contains(check)) {
+                        Platforms.add(new Rectangle(e.getX(), e.getY(), 10, 10));
+                        repaint();
+                    }
+                }
             }
         }
     }
 
     @Override
+    public void mouseDragged(MouseEvent e) {
+        if (SwingUtilities.isRightMouseButton(e)) {
+            check.setLocation(e.getX(), e.getY());
+            if (!marioHitbox.contains(check)) {
+                Platforms.add(new Rectangle(e.getX(), e.getY(), 10, 10));
+                repaint();
+            }
+        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+    }
+
+    @Override
     public void mouseReleased(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON3) {
-            yellowColor = !yellowColor;
+            blueColor = !blueColor;
             repaint();
         }
     }
 
     @Override public void mouseEntered(MouseEvent e) {}
     @Override public void mouseExited(MouseEvent e) {}
+    @Override public void mouseClicked(MouseEvent e) {}
 
 // -------------------- Keyboard --------------------
     @Override public void keyTyped(KeyEvent e) {}
