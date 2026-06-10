@@ -17,6 +17,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
 
     private BufferedImage background;
     private BufferedImage mario;
+    private BufferedImage winScreen;
 
     private boolean up, down, left, right;
 
@@ -29,15 +30,20 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
     private Graphics GEE;
 
     private Rectangle marioHitbox = new Rectangle(0, 0, 48, 80);
+    private Rectangle extraHitbox = new Rectangle(0, 0, 48, 80);
 
     ArrayList<Rectangle> Platforms = new ArrayList<>();
     private final SpeedPlatform platform1 = new SpeedPlatform(526, 440, 112, 11);
 
-    private Rectangle floor = new Rectangle(0, 515, 960, 1);
+    // Create floor with two rectangles and a hole in the middle
+    private Rectangle floorLeft = new Rectangle(0, 515, 400, 85);     // Left part of floor
+    private Rectangle floorRight = new Rectangle(560, 515, 400, 85);   // Right part of floor
+    private Rectangle hole = new Rectangle(400, 515, 160, 85);        // Hole in the middle
 
     private boolean onplatform;
     private boolean draw;
     private Point check = new Point();
+    private boolean gameWon = false; // Flag to track win state
 
     private double grav = 0.5;
 
@@ -51,10 +57,11 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
 
         Platforms.add(platform1);
 
-
         try {
             background = ImageIO.read(new File("src/background.png"));
             mario = ImageIO.read(new File("src/marioright.png"));
+            // Load win screen image (you'll need to add this file)
+            // winScreen = ImageIO.read(new File("src/winscreen.png"));
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -67,12 +74,15 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
         requestFocusInWindow();
 
         Timer timer = new Timer(16, e -> {
+            if (gameWon) return; // Stop game logic if won
+
             int prevX = marioX;
+            int prevY = marioY;
             MarioXVelocity = 5;
 
             marioHitbox.setBounds(marioX, marioY, 48, 80);
 
-// ---------------- GRAVITY ----------------
+            // ---------------- GRAVITY ----------------
             MarioYVelocity += grav;
 
             if (down) {
@@ -96,93 +106,154 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
 
             onplatform = false;
 
-// ---------------- Floor Collision ----------------
-            if (marioHitbox.intersects(floor)) {
-
-                marioY = floor.y - 80;
+            // ---------------- Floor Collision ----------------
+            // Check collision with both floor parts
+            if (marioHitbox.intersects(floorLeft) || marioHitbox.intersects(floorRight)) {
+                marioY = (marioHitbox.intersects(floorLeft) ? floorLeft : floorRight).y - 80;
                 MarioYVelocity = 0;
                 onplatform = true;
-
                 marioHitbox.setBounds(marioX, marioY, 48, 80);
             }
 
-// ---------------- Platform Collision ----------------
-                for (Rectangle thingy : Platforms) {
-                    if (thingy.intersects(new Rectangle(marioX, marioY + 1, 48, 80))) {
-                        if (MarioYVelocity > 0) {
-                            marioY = thingy.y - 80;
-                            MarioYVelocity = 0;
-                            onplatform = true;
-                            if (thingy instanceof SpeedPlatform) {
-                                MarioXVelocity = 10;
-                            }
-                        } else {
-                            MarioYVelocity *= -1;
-                            marioY = thingy.y + thingy.height;
+            // ---------------- Platform Collision ----------------
+            for (Rectangle thingy : Platforms) {
+                if (thingy.intersects(new Rectangle(marioX, marioY + 1, 48, 80))) {
+                    // Check if Mario was moving downward
+                    if (MarioYVelocity > 0) {
+                        marioY = thingy.y - 80;
+                        MarioYVelocity = 0;
+                        onplatform = true;
+                        if (thingy instanceof SpeedPlatform) {
+                            MarioXVelocity = 10;
                         }
-                        marioHitbox.setBounds(marioX, marioY, 48, 80);
+                    } else if (MarioYVelocity < 0) {
+                        // Head collision - bounce up
+                        marioY = thingy.y + thingy.height;
+                        MarioYVelocity *= -1;
                     }
+                    marioHitbox.setBounds(marioX, marioY, 48, 80);
                 }
+            }
 
-                if (left) {
-                    marioX -= (int) MarioXVelocity;
-                }
-                if (right) {
-                    marioX += (int) MarioXVelocity;
-                }
+            if (left) {
+                marioX -= (int) MarioXVelocity;
+            }
+            if (right) {
+                marioX += (int) MarioXVelocity;
+            }
 
+            // Check for collisions after movement
+            marioHitbox.setBounds(marioX, marioY, 48, 80);
+
+            // Prevent sticking by checking if we're still colliding
+            boolean stillColliding = false;
+            for (Rectangle dih : Platforms) {
+                if (marioHitbox.intersects(dih)) {
+                    stillColliding = true;
+                    break;
+                }
+            }
+            // Check floor collision
+            if (marioHitbox.intersects(floorLeft) || marioHitbox.intersects(floorRight)) {
+                stillColliding = true;
+            }
+
+            // If still colliding, revert position
+            if (stillColliding) {
+                marioX = prevX;
                 marioHitbox.setBounds(marioX, marioY, 48, 80);
-                for (Rectangle dih : Platforms) {
-                    if (marioHitbox.intersects(dih) || marioHitbox.intersects(floor)) {
-                        marioX = prevX;
-                    }
-                }
+            }
+
+            // Check win condition - if Mario hits platform1
+            if (marioHitbox.intersects(platform1)) {
+                gameWon = true;
+            }
+
             repaint();
         });
 
         timer.start();
     }
 
-// -------------------- Score Display--------------------
-    // ts loops
-@Override
-public void paintComponent(Graphics g) {
-    super.paintComponent(g);
+    // -------------------- Score Display--------------------
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
 
-    g.drawImage(background, 0, 0, null);
-    g.drawImage(mario, marioX, marioY, null);
+        g.drawImage(background, 0, 0, null);
 
-    g.setColor(Color.BLUE);
-    for (Rectangle r : Platforms) {
-        if (r != Platforms.get(0)) {
-            g.fillRect(r.x, r.y, 10, 10);
+        // Draw win screen if game is won
+        if (gameWon) {
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 48));
+            g.drawString("YOU WIN!", 350, 250);
+            g.setFont(new Font("Arial", Font.BOLD, 24));
+            g.drawString("Congratulations! You've completed the level.", 250, 320);
+            return;
         }
+
+        // Draw Mario and platforms normally
+        g.drawImage(mario, marioX, marioY, null);
+
+        g.setColor(Color.BLUE);
+        for (Rectangle r : Platforms) {
+            if (r != Platforms.get(0)) {
+                g.fillRect(r.x, r.y, 10, 10);
+            }
+        }
+
+        // Draw floor as two rectangles with a hole
+        g.setColor(Color.GREEN);
+        g.fillRect(floorLeft.x, floorLeft.y, floorLeft.width, floorLeft.height);
+        g.fillRect(floorRight.x, floorRight.y, floorRight.width, floorRight.height);
+
+        // Draw hole (as a gap)
+        g.setColor(Color.BLACK);
+        g.fillRect(hole.x, hole.y, hole.width, hole.height);
+
+        g.setFont(new Font("Arial", Font.BOLD, 16));
+        g.setColor(blueColor ? Color.BLUE : Color.BLACK);
+        g.drawString("Score: " + score, 50, 30);
     }
 
-    g.setFont(new Font("Arial", Font.BOLD, 16));
-    g.setColor(blueColor ? Color.BLUE : Color.BLACK);
-    g.drawString("Score: " + score, 50, 30);
-}
-//ts does NOT loop
+    //ts loops
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON3) {
             check.setLocation(e.getX(), e.getY());
-            for (int dih = 0; dih < Platforms.size(); dih++) {
-                if (!Platforms.get(dih).contains(check) && !marioHitbox.contains(check)) {
-                        Platforms.add(new Rectangle(e.getX(), e.getY(), 10, 10));
-                        repaint();
+            if (!marioHitbox.contains(check)) {
+                // Check for overlap before adding
+                boolean overlaps = false;
+                Rectangle newRect = new Rectangle(e.getX(), e.getY(), 10, 10);
+                for (Rectangle existing : Platforms) {
+                    if (existing.intersects(newRect)) {
+                        overlaps = true;
+                        break;
+                    }
+                }
+                if (!overlaps && !floorLeft.intersects(newRect) && !floorRight.intersects(newRect)) {
+                    Platforms.add(new Rectangle(e.getX(), e.getY(), 10, 10));
+                    repaint();
                 }
             }
         }
     }
-//ts loops
+
+    //ts loops
     @Override
     public void mouseDragged(MouseEvent e) {
         if (SwingUtilities.isRightMouseButton(e)) {
             check.setLocation(e.getX(), e.getY());
-            for (int dih = 0; dih < Platforms.size(); dih++) {
-                if (!Platforms.get(dih).contains(check) && !marioHitbox.contains(check)) {
+            if (!marioHitbox.contains(check)) {
+                boolean overlaps = false;
+                Rectangle newRect = new Rectangle(e.getX(), e.getY(), 10, 10);
+                for (Rectangle existing : Platforms) {
+                    if (existing.intersects(newRect)) {
+                        overlaps = true;
+                        break;
+                    }
+                }
+                if (!overlaps && !floorLeft.intersects(newRect) && !floorRight.intersects(newRect)) {
                     Platforms.add(new Rectangle(e.getX(), e.getY(), 10, 10));
                     repaint();
                 }
@@ -206,7 +277,7 @@ public void paintComponent(Graphics g) {
     @Override public void mouseExited(MouseEvent e) {}
     @Override public void mouseClicked(MouseEvent e) {}
 
-// -------------------- Keyboard --------------------
+    // -------------------- Keyboard --------------------
     @Override public void keyTyped(KeyEvent e) {}
 
     @Override
