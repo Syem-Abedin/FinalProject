@@ -36,7 +36,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
 
     ArrayList<Rectangle> Platforms = new ArrayList<>();
     private final SpeedPlatform platform1 = new SpeedPlatform(526, 440, 112, 11);
-    private Rectangle Winbox = new Rectangle(platform1.x, platform1.y + 5, platform1.width, platform1.height);
+    private Rectangle Winbox = new Rectangle(platform1.x, platform1.y - 1, platform1.width, platform1.height);
 
     // Create floor with two rectangles and a hole in the middle
     private Rectangle floorLeft = new Rectangle(0, 515, 400, 999);     // Left part of floor
@@ -150,6 +150,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
 
             if (left) {
                 marioX -= (int) MarioXVelocity;
+
             }
             if (right) {
                 marioX += (int) MarioXVelocity;
@@ -161,17 +162,16 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
             // Prevent sticking by checking if we're still colliding
             boolean stillColliding = false;
             for (Rectangle dih : Platforms) {
-                if (marioHitbox.intersects(dih)) {
+                if (marioHitbox.intersects(dih) && (dih.y - marioHitbox.y < 50)) {
                     stillColliding = true;
                     break;
                 }
             }
-            // Check floor collision
+
             if (marioHitbox.intersects(floorLeft) || marioHitbox.intersects(floorRight)) {
                 stillColliding = true;
             }
 
-            // If still colliding, revert position
             if (stillColliding) {
                 marioX = prevX;
                 marioHitbox.setBounds(marioX, marioY, 48, 80);
@@ -203,7 +203,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
         g.setColor(new Color(60, 63, 64));
         g.fillRect(platform1.x, platform1.y, platform1.width, platform1.height);
 
-        // Draw floor as two rectangles with a hole
+
         g.setColor(new Color(34, 139, 34));
         g.fillRect(floorLeft.x, floorLeft.y, floorLeft.width, floorLeft.height);
         g.fillRect(floorRight.x, floorRight.y, floorRight.width, floorRight.height);
@@ -215,7 +215,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
         g.setColor(Color.RED);
         g.drawString("Winning?: " + gameWon, 120, 30);
 
-        // Draw win screen if game is won
+
         if (gameWon) {
             g.setColor(new Color(69, 255, 247));
             g.setFont(new Font("Minecraft", Font.BOLD, 48));
