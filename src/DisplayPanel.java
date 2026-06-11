@@ -1,3 +1,5 @@
+import org.w3c.dom.css.Rect;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -34,16 +36,19 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
 
     ArrayList<Rectangle> Platforms = new ArrayList<>();
     private final SpeedPlatform platform1 = new SpeedPlatform(526, 440, 112, 11);
+    private Rectangle Winbox = new Rectangle(platform1.x, platform1.y + 5, platform1.width, platform1.height);
 
     // Create floor with two rectangles and a hole in the middle
-    private Rectangle floorLeft = new Rectangle(0, 515, 400, 85);     // Left part of floor
-    private Rectangle floorRight = new Rectangle(560, 515, 400, 85);   // Right part of floor
-    private Rectangle hole = new Rectangle(400, 515, 160, 85);        // Hole in the middle
+    private Rectangle floorLeft = new Rectangle(0, 515, 400, 999);     // Left part of floor
+    private Rectangle floorRight = new Rectangle(560, 515, 400, 999);   // Right part of floor
+    private Rectangle hole = new Rectangle(0, 815, 960, 999);        // Hole in the middle
 
     private boolean onplatform;
     private boolean draw;
     private Point check = new Point();
-    private boolean gameWon = false; // Flag to track win state
+    private boolean gameWon = false;
+    private boolean gameLost = false;
+    private float fadeAlpha = 0.0f;
 
     private double grav = 0.5;
 
@@ -81,6 +86,14 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
             MarioXVelocity = 5;
 
             marioHitbox.setBounds(marioX, marioY, 48, 80);
+
+            if (marioHitbox.intersects(Winbox)) {
+                gameWon = true;
+            }
+
+            if (marioHitbox.intersects(hole)) {
+                gameLost = true;
+            }
 
             // ---------------- GRAVITY ----------------
             MarioYVelocity += grav;
@@ -164,11 +177,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
                 marioHitbox.setBounds(marioX, marioY, 48, 80);
             }
 
-            // Check win condition - if Mario hits platform1
-            if (marioHitbox.intersects(platform1)) {
-                gameWon = true;
-            }
-
             repaint();
         });
 
@@ -182,16 +190,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
 
         g.drawImage(background, 0, 0, null);
 
-        // Draw win screen if game is won
-        if (gameWon) {
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Arial", Font.BOLD, 48));
-            g.drawString("YOU WIN!", 350, 250);
-            g.setFont(new Font("Arial", Font.BOLD, 24));
-            g.drawString("Congratulations! You've completed the level.", 250, 320);
-            return;
-        }
-
         // Draw Mario and platforms normally
         g.drawImage(mario, marioX, marioY, null);
 
@@ -202,18 +200,44 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
             }
         }
 
+        g.setColor(new Color(60, 63, 64));
+        g.fillRect(platform1.x, platform1.y, platform1.width, platform1.height);
+
         // Draw floor as two rectangles with a hole
-        g.setColor(Color.GREEN);
+        g.setColor(new Color(34, 139, 34));
         g.fillRect(floorLeft.x, floorLeft.y, floorLeft.width, floorLeft.height);
         g.fillRect(floorRight.x, floorRight.y, floorRight.width, floorRight.height);
-
-        // Draw hole (as a gap)
-        g.setColor(Color.BLACK);
-        g.fillRect(hole.x, hole.y, hole.width, hole.height);
 
         g.setFont(new Font("Arial", Font.BOLD, 16));
         g.setColor(blueColor ? Color.BLUE : Color.BLACK);
         g.drawString("Score: " + score, 50, 30);
+
+        g.setColor(Color.RED);
+        g.drawString("Winning?: " + gameWon, 120, 30);
+
+        // Draw win screen if game is won
+        if (gameWon) {
+            g.setColor(new Color(69, 255, 247));
+            g.setFont(new Font("Minecraft", Font.BOLD, 48));
+            g.drawString("YOU WIN!", 350, 250);
+            g.setFont(new Font("Minecraft", Font.BOLD, 24));
+            g.drawString("Congratulations! You've completed the level.", 250, 320);
+            return;
+        }
+        if (gameLost) {
+            g.setColor(new Color(0, 0, 0, 125));
+            g.fillRect(0, 135, 960, 240);
+            g.setColor(new Color(0, 0, 0, 125));
+            g.fillRect(0, 145, 960, 220);
+            g.setColor(new Color(0, 0, 0, 125));
+            g.fillRect(0, 155, 960, 200);
+            g.setColor(Color.RED);
+            g.setFont(new Font("Minecraft", Font.BOLD, 48));
+            g.drawString("YOU DIED", 350, 250);
+            g.setFont(new Font("Minecraft", Font.BOLD, 24));
+            g.drawString("nah twin u dead lost", 350, 320);
+            return;
+        }
     }
 
     //ts loops
@@ -232,7 +256,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
                     }
                 }
                 if (!overlaps && !floorLeft.intersects(newRect) && !floorRight.intersects(newRect)) {
-                    Platforms.add(new Rectangle(e.getX(), e.getY(), 10, 10));
+                    Platforms.add(newRect);
                     repaint();
                 }
             }
@@ -258,6 +282,13 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
                     repaint();
                 }
             }
+        } else if (SwingUtilities.isLeftMouseButton(e)) {
+            for (Rectangle dih : Platforms)
+                if (dih.contains(e.getPoint())) {
+                    Platforms.remove(dih);
+                    repaint();
+                    break;
+                }
         }
     }
 
