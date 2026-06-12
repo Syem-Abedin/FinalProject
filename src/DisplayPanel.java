@@ -97,7 +97,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
         requestFocusInWindow();
 
         Timer timer = new Timer(16, e -> {
-            if (gameWon) return;
             if (levelComplete) return;
 
             // Only reset speed if no boost is active this frame
@@ -122,9 +121,10 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
                     nextLevelTimer.start();
                 } else {
                     gameWon = true;
+                    repaint();
                 }
-                return;
             }
+            if (gameWon) return;
 
             // Kill zones
             marioHitbox.setBounds(marioX, marioY, 48, 80);
@@ -219,7 +219,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
 
                 int solidTop    = solid.y;
                 int solidBottom = solid.y + solid.height;
-                int marioFeet   = marioHitbox.y + marioHitbox.height;
                 int marioHead   = marioHitbox.y;
 
                 if (MarioYVelocity >= 0 && prevFeetY <= solidTop) {
@@ -374,7 +373,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
         g.drawImage(background, 0, 0, null);
 
         // Floor
-        g.setColor(new Color(34, 139, 34));
+        g.setColor(new Color(57, 60, 64));
         for (Rectangle floor : floorSegments) {
             g.fillRect(floor.x, floor.y, floor.width, floor.height);
         }
@@ -385,7 +384,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
             g.fillRect(kill.x, kill.y, kill.width, kill.height);
         }
 
-        // Static platforms — speed platforms get a distinct amber tint
+        // Speed platforms
         for (Rectangle r : staticPlatforms) {
             g.setColor(r instanceof SpeedPlatform ? new Color(200, 140, 30) : new Color(60, 63, 64));
             g.fillRect(r.x, r.y, r.width, r.height);
@@ -455,6 +454,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
             g.drawString("YOU WIN!", 350, 250);
             g.setFont(new Font("Minecraft", Font.BOLD, 24));
             g.drawString("Congratulations! You're goated twin.", 250, 320);
+            repaint();
             return;
         }
 
@@ -470,6 +470,7 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
             g.drawString("YOU DIED", 350, 250);
             g.setFont(new Font("Minecraft", Font.BOLD, 24));
             g.drawString("nah twin u dead lost   [R to retry]", 270, 320);
+            repaint();
             return;
         }
     }
