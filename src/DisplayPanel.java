@@ -20,7 +20,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
     private BufferedImage winImage;
     private BufferedImage MillerImage;
 
-    // Which image is currently used for the win zone
     private BufferedImage activeWinImage;
 
     private boolean up, down, left, right;
@@ -189,7 +188,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
                     }
                 }
 
-                // True wall — push Mario out on the axis he moved into
                 // overlapLeft  = how far Mario's right edge crossed the solid's left edge (right-move penetration)
                 // overlapRight = how far the solid's right edge crossed Mario's left edge (left-move penetration)
                 if (marioX > prevX) {
@@ -404,7 +402,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
             if (activeWinImage != null) {
                 g.drawImage(activeWinImage, Winbox.x, Winbox.y, Winbox.width, Winbox.height, null);
             } else {
-                // fallback if image failed to load
                 g.setColor(new Color(255, 220, 0, 180));
                 g.fillRect(Winbox.x, Winbox.y, Winbox.width, Winbox.height);
                 g.setColor(new Color(255, 180, 0));
@@ -415,7 +412,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
             }
         }
 
-        // Mario
         g.drawImage(mario, marioX, marioY, null);
 
         // Middle-click drag preview
@@ -525,7 +521,6 @@ public class DisplayPanel extends JPanel implements MouseListener, MouseMotionLi
 
     @Override
     public void mousePressed(MouseEvent e) {
-        // Right-click: place a small platform dot
         if (e.getButton() == MouseEvent.BUTTON3) {
             check.setLocation(e.getX(), e.getY());
             if (!marioHitbox.contains(check)) {
